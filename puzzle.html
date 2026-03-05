@@ -325,8 +325,14 @@ window.addEventListener('load', () => {
 });
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - 60;
+  const dpr = window.devicePixelRatio || 1;
+  const w = window.innerWidth;
+  const h = window.innerHeight - 60;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.scale(dpr, dpr);
   if (pieces.length > 0) drawAll();
 }
 
@@ -398,10 +404,11 @@ function generatePieces() {
 
   // Board size changes per difficulty
   let boardRatio;
-  if (gridSize === 2) boardRatio = 0.38;      // Easy — smaller board, more scatter room
-  else if (gridSize === 3) boardRatio = 0.44; // Medium — balanced
-  else boardRatio = 0.50;                     // Hard — bigger board, smaller pieces
-
+ const isMobile = window.innerWidth < 768;
+ if (gridSize === 2) boardRatio = isMobile ? 0.70 : 0.38;
+ else if (gridSize === 3) boardRatio = isMobile ? 0.72 : 0.44;
+ else boardRatio = isMobile ? 0.75 : 0.50;
+ 
   const boardSize = Math.min(cw, ch) * boardRatio;
   BOARD_W = boardSize;
   BOARD_H = boardSize;
