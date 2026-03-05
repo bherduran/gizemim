@@ -858,8 +858,8 @@ function checkWin() {
 function showWin() {
   const ws = document.getElementById('win-screen');
   document.getElementById('win-image').src = PHOTOS[currentPhotoIndex].src;
-  document.getElementById('win-title').textContent = ['Beautiful!', 'Lovely!', 'Perfect!'][currentPhotoIndex] || 'Beautiful!';
-  document.getElementById('win-sub').textContent = ['you put us back together', 'our memories restored', 'one more to go...'][currentPhotoIndex] || 'amazing!';
+  document.getElementById('win-title').textContent = ['Güzelim Benimmm', 'Hayatımın Anlamıııı', 'Perfect!'][currentPhotoIndex] || 'Beautiful!';
+  document.getElementById('win-sub').textContent = ['Ayrı Gayrı Olmuyo Çabukkk', 'Çok güzelsin yaa', 'one more to go...'][currentPhotoIndex] || 'amazing!';
 
   // Level dots
   const dots = document.getElementById('level-dots');
@@ -871,7 +871,7 @@ function showWin() {
   });
 
   const nextBtn = document.getElementById('next-btn');
-  nextBtn.textContent = currentPhotoIndex < PHOTOS.length - 2 ? 'Next Photo ♥' : 'Last Photo ♥';
+  nextBtn.textContent = currentPhotoIndex < PHOTOS.length - 2 ? 'Sonraki Fotoğraf ♥' : 'Son Fotoğraf ♥';
 
   ws.classList.remove('hidden');
 }
