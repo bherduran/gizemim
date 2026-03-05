@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>G & B — Our Puzzle</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --crimson: #8B0000;
+    --crimson-light: #C41E3A;
+    --gold: #CFB53B;
+    --gold-light: #FFD700;
+    --cream: #FAF0E6;
+    --dark: #1a0a00;
+    --dark2: #2d1200;
+  }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--dark);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    touch-action: none;
+  }
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 20% 20%, #3d0a00 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, #2a1000 0%, transparent 60%),
+                #0d0400;
+  }
+
+  /* Nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(13,4,0,0.9);
+    border-bottom: 1px solid rgba(207,181,59,0.2);
+  }
+  nav a { color: rgba(207,181,59,0.7); text-decoration: none; font-size: 0.85rem; letter-spacing: 0.15em; transition: color 0.3s; }
+  nav a:hover { color: var(--gold-light); }
+  .nav-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--gold); }
+
+  /* Screen overlays */
+  .screen {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(13,4,0,0.97);
+    transition: opacity 0.6s ease;
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  .screen-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .screen-sub {
+    font-style: italic; color: var(--cream); opacity: 0.6;
+    font-size: 1rem; margin-bottom: 3rem; letter-spacing: 0.1em;
+  }
+
+  /* Difficulty buttons */
+  .diff-buttons { display: flex; flex-direction: column; gap: 1rem; width: 280px; }
+  .diff-btn {
+    padding: 1.1rem 2rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.1em;
+    position: relative; overflow: hidden;
+  }
+  .diff-btn::before {
+    content: ''; position: absolute; inset: 0;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .diff-btn:hover::before { opacity: 1; }
+  .diff-btn:hover { transform: translateX(6px); }
+  .diff-btn span { position: relative; z-index: 1; }
+
+  .btn-easy { background: rgba(0,100,0,0.2); border-color: #4a7; color: #8f8; }
+  .btn-easy::before { background: rgba(0,100,0,0.3); }
+  .btn-medium { background: rgba(180,120,0,0.2); border-color: var(--gold); color: var(--gold-light); }
+  .btn-medium::before { background: rgba(180,120,0,0.3); }
+  .btn-hard { background: rgba(139,0,0,0.2); border-color: var(--crimson-light); color: #ff8888; }
+  .btn-hard::before { background: rgba(139,0,0,0.3); }
+
+  .diff-hint { font-size: 0.8rem; opacity: 0.4; margin-left: auto; }
+
+  /* Photo selector */
+  .photo-selector { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
+  .photo-thumb {
+    width: 80px; height: 80px; object-fit: cover;
+    border: 2px solid rgba(207,181,59,0.3);
+    cursor: pointer; transition: all 0.3s;
+    filter: grayscale(50%);
+  }
+  .photo-thumb.active, .photo-thumb:hover {
+    border-color: var(--gold-light);
+    filter: grayscale(0%);
+    transform: scale(1.05);
+  }
+
+  /* Game area */
+  #game-area {
+    position: fixed;
+    top: 60px; left: 0; right: 0; bottom: 0;
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  canvas { display: block; }
+
+  /* HUD */
+  .hud {
+    position: fixed;
+    top: 70px; left: 0; right: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1.5rem;
+    pointer-events: none;
+  }
+  .hud-item {
+    font-size: 0.85rem;
+    color: rgba(207,181,59,0.7);
+    letter-spacing: 0.1em;
+    pointer-events: all;
+  }
+  .progress-bar {
+    width: 150px; height: 3px;
+    background: rgba(207,181,59,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--crimson-light), var(--gold));
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* Win screen */
+  .win-hearts { font-size: 3rem; margin-bottom: 1rem; animation: pulse-hearts 1s ease-in-out infinite; }
+  @keyframes pulse-hearts { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+
+  .win-image {
+    width: min(280px, 70vw);
+    height: min(280px, 70vw);
+    object-fit: cover;
+    border: 2px solid var(--gold);
+    margin: 1.5rem 0;
+    animation: glow 2s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%,100%{box-shadow:0 0 20px rgba(207,181,59,0.3)}
+    50%{box-shadow:0 0 40px rgba(207,181,59,0.6)}
+  }
+
+  .btn-next {
+    padding: 1rem 2.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, var(--crimson), var(--crimson-light));
+    color: var(--gold-light);
+    border: 1px solid var(--gold);
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.1em;
+    margin-top: 0.5rem;
+  }
+  .btn-next:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(207,181,59,0.3); }
+
+  .level-indicator {
+    display: flex; gap: 0.5rem; margin: 1rem 0;
+  }
+  .level-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1px solid var(--gold);
+    background: transparent;
+    transition: background 0.3s;
+  }
+  .level-dot.done { background: var(--gold); }
+
+  @media (max-width: 480px) {
+    nav { padding: 0.8rem 1rem; }
+    .hud { padding: 0.4rem 1rem; }
+    .progress-bar { width: 100px; }
+  }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html">← Home</a>
+  <span class="nav-title">G & B</span>
+  <a href="gallery.html">Gallery →</a>
+</nav>
+
+<!-- Difficulty Select Screen -->
+<div class="screen" id="diff-screen">
+  <div class="screen-title">Our Puzzle</div>
+  <div class="screen-sub">choose your difficulty, my love</div>
+
+  <div class="photo-selector" id="photo-selector"></div>
+
+  <div class="diff-buttons">
+    <button class="diff-btn btn-easy" onclick="startGame(2)">
+      <span>Easy <span class="diff-hint">2×2</span></span>
+    </button>
+    <button class="diff-btn btn-medium" onclick="startGame(3)">
+      <span>Medium <span class="diff-hint">3×3</span></span>
+    </button>
+    <button class="diff-btn btn-hard" onclick="startGame(4)">
+      <span>Hard <span class="diff-hint">4×4</span></span>
+    </button>
+  </div>
+</div>
+
+<!-- Win Screen -->
+<div class="screen hidden" id="win-screen">
+  <div class="win-hearts">♥ ♥ ♥</div>
+  <div class="screen-title" id="win-title">Beautiful!</div>
+  <div class="screen-sub" id="win-sub">you put us back together</div>
+  <img id="win-image" class="win-image" src="" alt="">
+  <div class="level-indicator" id="level-dots"></div>
+  <button class="btn-next" id="next-btn" onclick="nextLevel()">Next Photo ♥</button>
+</div>
+
+<!-- Final Win Screen -->
+<div class="screen hidden" id="final-screen">
+  <div class="win-hearts">♥ ♥ ♥ ♥ ♥</div>
+  <div class="screen-title">You did it!</div>
+  <div class="screen-sub" style="margin-bottom:1rem">all our memories, restored</div>
+  <p style="font-style:italic;color:var(--gold-pale);font-size:1.2rem;max-width:320px;text-align:center;line-height:1.8;margin-bottom:2rem">
+    Every piece of this puzzle is a piece of my heart.<br>
+    <span style="color:var(--gold-light)">I love you, always.</span>
+  </p>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
+    <button class="btn-next" onclick="restartGame()">Play Again ♥</button>
+    <button class="btn-next" style="background:transparent;border-color:rgba(207,181,59,0.4)" onclick="window.location='gallery.html'">Our Gallery</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div class="hud" id="hud" style="display:none">
+  <span class="hud-item" id="hud-level">Photo 1 of 3</span>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <span class="hud-item" id="hud-pieces">0 / 0</span>
+</div>
+
+<!-- Game canvas -->
+<div id="game-area">
+  <canvas id="puzzle-canvas"></canvas>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION — Add your photo URLs here!
+// ============================================================
+const PHOTOS = [
+  { src: 'photos/photo1.jpg', label: 'Memory 1' },
+  { src: 'photos/photo2.jpg', label: 'Memory 2' },
+  { src: 'photos/photo3.jpg', label: 'Memory 3' },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentPhotoIndex = 0;
+let selectedPhotoIndex = 0;
+let gridSize = 3;
+let pieces = [];
+let dragging = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+let placedCount = 0;
+let totalPieces = 0;
+let images = [];
+let canvas, ctx;
+let PIECE_W, PIECE_H;
+let BOARD_X, BOARD_Y, BOARD_W, BOARD_H;
+const TAB_SIZE = 0.35; // size of jigsaw tab relative to piece
+const TAB_TOLERANCE = 0.4; // snap tolerance
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  canvas = document.getElementById('puzzle-canvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Load all images
+  let loaded = 0;
+  PHOTOS.forEach((p, i) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { loaded++; if(loaded === PHOTOS.length) initPhotoSelector(); };
+    img.onerror = () => { loaded++; if(loaded === PHOTOS.length) initPhotoSelector(); };
+    img.src = p.src;
+    images[i] = img;
+  });
+
+  // Input events
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseup', onUp);
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+  canvas.addEventListener('touchend', onTouchEnd);
+});
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  if (pieces.length > 0) drawAll();
+}
+
+function initPhotoSelector() {
+  const sel = document.getElementById('photo-selector');
+  sel.innerHTML = '';
+  PHOTOS.forEach((p, i) => {
+    const img = document.createElement('img');
+    img.src = p.src;
+    img.className = 'photo-thumb' + (i === 0 ? ' active' : '');
+    img.onclick = () => {
+      document.querySelectorAll('.photo-thumb').forEach(t => t.classList.remove('active'));
+      img.classList.add('active');
+      selectedPhotoIndex = i;
+    };
+    sel.appendChild(img);
+  });
+}
+
+// ============================================================
+// GAME START
+// ============================================================
+function startGame(size) {
+  gridSize = size;
+  currentPhotoIndex = selectedPhotoIndex;
+  placedCount = 0;
+  totalPieces = gridSize * gridSize;
+  pieces = [];
+
+  document.getElementById('diff-screen').classList.add('hidden');
+  document.getElementById('hud').style.display = 'flex';
+  updateHUD();
+
+  generatePieces();
+  drawAll();
+}
+
+function nextLevel() {
+  currentPhotoIndex++;
+  if (currentPhotoIndex >= PHOTOS.length) {
+    showFinalWin();
+    return;
+  }
+  document.getElementById('win-screen').classList.add('hidden');
+  placedCount = 0;
+  pieces = [];
+  updateHUD();
+  generatePieces();
+  drawAll();
+}
+
+function restartGame() {
+  document.getElementById('final-screen').classList.add('hidden');
+  document.getElementById('win-screen').classList.add('hidden');
+  document.getElementById('hud').style.display = 'none';
+  currentPhotoIndex = 0;
+  selectedPhotoIndex = 0;
+  pieces = [];
+  initPhotoSelector();
+  document.getElementById('diff-screen').classList.remove('hidden');
+}
+
+// ============================================================
+// PIECE GENERATION
+// ============================================================
+function generatePieces() {
+  const cw = canvas.width;
+  const ch = canvas.height;
+
+  // Board occupies center 55% of screen
+  const boardSize = Math.min(cw, ch) * 0.52;
+  BOARD_W = boardSize;
+  BOARD_H = boardSize;
+  BOARD_X = (cw - BOARD_W) / 2;
+  BOARD_Y = (ch - BOARD_H) / 2 + 10;
+
+  PIECE_W = BOARD_W / gridSize;
+  PIECE_H = BOARD_H / gridSize;
+
+  // Generate tab directions for each piece
+  // Each piece has top/right/bottom/left tab: 1=out, -1=in, 0=flat(edge)
+  const tabs = [];
+  for (let r = 0; r < gridSize; r++) {
+    tabs[r] = [];
+    for (let c = 0; c < gridSize; c++) {
+      tabs[r][c] = {
+        top:    r === 0 ? 0 : -tabs[r-1][c].bottom,
+        left:   c === 0 ? 0 : -tabs[r][c-1].right,
+        bottom: r === gridSize-1 ? 0 : (Math.random() > 0.5 ? 1 : -1),
+        right:  c === gridSize-1 ? 0 : (Math.random() > 0.5 ? 1 : -1),
+      };
+    }
+  }
+
+  // Scatter positions (avoid board center)
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      const correctX = BOARD_X + c * PIECE_W;
+      const correctY = BOARD_Y + r * PIECE_H;
+
+      // Random scatter position
+      let px, py;
+      const side = Math.floor(Math.random() * 4);
+      const margin = 20;
+      const pw = PIECE_W * 1.4;
+      const ph = PIECE_H * 1.4;
+      if (side === 0) { // left
+        px = Math.random() * (BOARD_X - pw - margin) + margin;
+        py = Math.random() * (ch - ph) + ph/2;
+      } else if (side === 1) { // right
+        px = BOARD_X + BOARD_W + margin + Math.random() * (cw - BOARD_X - BOARD_W - pw - margin);
+        py = Math.random() * (ch - ph) + ph/2;
+      } else if (side === 2) { // top
+        px = Math.random() * (cw - pw) + pw/2;
+        py = Math.random() * (BOARD_Y - ph - margin) + margin;
+      } else { // bottom
+        px = Math.random() * (cw - pw) + pw/2;
+        py = BOARD_Y + BOARD_H + margin + Math.random() * (ch - BOARD_Y - BOARD_H - ph - margin);
+      }
+
+      // Clamp to canvas
+      px = Math.max(pw/2, Math.min(cw - pw/2, px));
+      py = Math.max(ph/2, Math.min(ch - ph/2, py));
+
+      pieces.push({
+        row: r, col: c,
+        x: px, y: py,
+        correctX, correctY,
+        tabs: tabs[r][c],
+        placed: false,
+        zIndex: r * gridSize + c,
+      });
+    }
+  }
+}
+
+// ============================================================
+// JIGSAW SHAPE PATH
+// ============================================================
+function buildPiecePath(piece, offsetX = 0, offsetY = 0) {
+  const { tabs } = piece;
+  const pw = PIECE_W, ph = PIECE_H;
+  const t = Math.min(pw, ph) * TAB_SIZE;
+  const x = offsetX, y = offsetY;
+
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+
+  // Top edge
+  if (tabs.top === 0) {
+    ctx.lineTo(x + pw, y);
+  } else {
+    ctx.lineTo(x + pw * 0.3, y);
+    bezierTab(x + pw*0.3, y, x + pw*0.7, y, tabs.top * t, true);
+    ctx.lineTo(x + pw, y);
+  }
+
+  // Right edge
+  if (tabs.right === 0) {
+    ctx.lineTo(x + pw, y + ph);
+  } else {
+    ctx.lineTo(x + pw, y + ph * 0.3);
+    bezierTab(x + pw, y + ph*0.3, x + pw, y + ph*0.7, tabs.right * t, false);
+    ctx.lineTo(x + pw, y + ph);
+  }
+
+  // Bottom edge (reversed)
+  if (tabs.bottom === 0) {
+    ctx.lineTo(x, y + ph);
+  } else {
+    ctx.lineTo(x + pw * 0.7, y + ph);
+    bezierTab(x + pw*0.7, y + ph, x + pw*0.3, y + ph, -tabs.bottom * t, true);
+    ctx.lineTo(x, y + ph);
+  }
+
+  // Left edge (reversed)
+  if (tabs.left === 0) {
+    ctx.lineTo(x, y);
+  } else {
+    ctx.lineTo(x, y + ph * 0.7);
+    bezierTab(x, y + ph*0.7, x, y + ph*0.3, -tabs.left * t, false);
+    ctx.lineTo(x, y);
+  }
+
+  ctx.closePath();
+}
+
+function bezierTab(x1, y1, x2, y2, bulge, horizontal) {
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  const len = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+  const norm = len * 0.18;
+
+  if (horizontal) {
+    // Tab goes perpendicular to horizontal edge
+    ctx.bezierCurveTo(
+      x1 + (x2-x1)*0.2, y1 - bulge * 0.1,
+      mx - norm, my - bulge,
+      mx, my - bulge
+    );
+    ctx.bezierCurveTo(
+      mx + norm, my - bulge,
+      x2 - (x2-x1)*0.2, y2 - bulge * 0.1,
+      x2, y2
+    );
+  } else {
+    // Tab goes perpendicular to vertical edge
+    ctx.bezierCurveTo(
+      x1 - bulge * 0.1, y1 + (y2-y1)*0.2,
+      mx - bulge, my - norm,
+      mx - bulge, my
+    );
+    ctx.bezierCurveTo(
+      mx - bulge, my + norm,
+      x2 - bulge * 0.1, y2 - (y2-y1)*0.2,
+      x2, y2
+    );
+  }
+}
+
+// ============================================================
+// DRAWING
+// ============================================================
+function drawAll() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBoard();
+
+  // Sort by zIndex
+  const sorted = [...pieces].sort((a, b) => a.zIndex - b.zIndex);
+  sorted.forEach(p => drawPiece(p));
+}
+
+function drawBoard() {
+  // Board background
+  ctx.fillStyle = 'rgba(207,181,59,0.05)';
+  ctx.strokeStyle = 'rgba(207,181,59,0.25)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
+  ctx.strokeRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(207,181,59,0.12)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < gridSize; i++) {
+    ctx.beginPath();
+    ctx.moveTo(BOARD_X + i * PIECE_W, BOARD_Y);
+    ctx.lineTo(BOARD_X + i * PIECE_W, BOARD_Y + BOARD_H);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(BOARD_X, BOARD_Y + i * PIECE_H);
+    ctx.lineTo(BOARD_X + BOARD_W, BOARD_Y + i * PIECE_H);
+    ctx.stroke();
+  }
+
+  // Corner accents
+  const accLen = 20;
+  ctx.strokeStyle = 'rgba(207,181,59,0.5)';
+  ctx.lineWidth = 2;
+  [[BOARD_X, BOARD_Y], [BOARD_X+BOARD_W, BOARD_Y],
+   [BOARD_X, BOARD_Y+BOARD_H], [BOARD_X+BOARD_W, BOARD_Y+BOARD_H]].forEach(([cx,cy], i) => {
+    const sx = i%2===0?1:-1, sy = i<2?1:-1;
+    ctx.beginPath(); ctx.moveTo(cx+sx*accLen, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy+sy*accLen); ctx.stroke();
+  });
+}
+
+function drawPiece(piece) {
+  const img = images[currentPhotoIndex];
+  const pw = PIECE_W, ph = PIECE_H;
+  const t = Math.min(pw,ph) * TAB_SIZE;
+
+  ctx.save();
+
+  // Shadow for dragging piece
+  if (dragging === piece) {
+    ctx.shadowColor = 'rgba(207,181,59,0.4)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 4;
+    ctx.shadowOffsetY = 4;
+  } else if (!piece.placed) {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+  }
+
+  // Clip to jigsaw shape
+  buildPiecePath(piece, piece.x - pw/2, piece.y - ph/2);
+  ctx.clip();
+
+  // Draw image portion
+  if (img && img.complete && img.naturalWidth > 0) {
+    const srcX = piece.col * (img.naturalWidth / gridSize);
+    const srcY = piece.row * (img.naturalHeight / gridSize);
+    const srcW = img.naturalWidth / gridSize;
+    const srcH = img.naturalHeight / gridSize;
+
+    // Extra padding for tabs
+    const pad = t * 0.6;
+    ctx.drawImage(img,
+      srcX - pad * (img.naturalWidth/pw), srcY - pad * (img.naturalHeight/ph),
+      srcW + 2*pad*(img.naturalWidth/pw), srcH + 2*pad*(img.naturalHeight/ph),
+      piece.x - pw/2 - pad, piece.y - ph/2 - pad,
+      pw + 2*pad, ph + 2*pad
+    );
+  } else {
+    // Placeholder
+    ctx.fillStyle = `hsl(${piece.row*50+piece.col*20}, 40%, 25%)`;
+    ctx.fillRect(piece.x - pw/2, piece.y - ph/2, pw, ph);
+  }
+
+  ctx.restore();
+  ctx.save();
+
+  // Border
+  buildPiecePath(piece, piece.x - pw/2, piece.y - ph/2);
+  ctx.strokeStyle = piece.placed
+    ? 'rgba(207,181,59,0.6)'
+    : dragging === piece
+      ? 'rgba(207,181,59,0.9)'
+      : 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = piece.placed ? 1.5 : 1;
+  ctx.stroke();
+
+  // Glow if just placed
+  if (piece.justPlaced) {
+    buildPiecePath(piece, piece.x - pw/2, piece.y - ph/2);
+    ctx.strokeStyle = 'rgba(207,181,59,0.8)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    setTimeout(() => { piece.justPlaced = false; drawAll(); }, 500);
+  }
+
+  ctx.restore();
+}
+
+// ============================================================
+// HUD
+// ============================================================
+function updateHUD() {
+  document.getElementById('hud-level').textContent = `Photo ${currentPhotoIndex+1} of ${PHOTOS.length}`;
+  document.getElementById('hud-pieces').textContent = `${placedCount} / ${totalPieces}`;
+  const pct = totalPieces > 0 ? (placedCount / totalPieces) * 100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+// ============================================================
+// DRAG
+// ============================================================
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function getPieceAt(x, y) {
+  const sorted = [...pieces].sort((a,b) => b.zIndex - a.zIndex);
+  for (const p of sorted) {
+    if (p.placed) continue;
+    if (Math.abs(x - p.x) < PIECE_W/2 + 5 && Math.abs(y - p.y) < PIECE_H/2 + 5) return p;
+  }
+  return null;
+}
+
+let maxZ = 100;
+
+function onDown(e) {
+  const {x, y} = getPos(e);
+  const p = getPieceAt(x, y);
+  if (!p) return;
+  dragging = p;
+  dragOffsetX = x - p.x;
+  dragOffsetY = y - p.y;
+  p.zIndex = ++maxZ;
+  drawAll();
+}
+
+function onMove(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  const {x, y} = getPos(e);
+  dragging.x = x - dragOffsetX;
+  dragging.y = y - dragOffsetY;
+  drawAll();
+}
+
+function onUp(e) {
+  if (!dragging) return;
+  trySnap(dragging);
+  dragging = null;
+  drawAll();
+}
+
+function onTouchStart(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  onDown({ clientX: t.clientX, clientY: t.clientY });
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  onMove({ clientX: t.clientX, clientY: t.clientY, preventDefault: ()=>{} });
+}
+function onTouchEnd(e) { onUp(e); }
+
+// ============================================================
+// SNAP
+// ============================================================
+function trySnap(piece) {
+  const snapDist = Math.min(PIECE_W, PIECE_H) * TAB_TOLERANCE;
+  const dx = Math.abs(piece.x - (piece.correctX + PIECE_W/2));
+  const dy = Math.abs(piece.y - (piece.correctY + PIECE_H/2));
+
+  if (dx < snapDist && dy < snapDist) {
+    // Smooth snap animation
+    const targetX = piece.correctX + PIECE_W/2;
+    const targetY = piece.correctY + PIECE_H/2;
+    animateSnap(piece, targetX, targetY, () => {
+      piece.placed = true;
+      piece.justPlaced = true;
+      piece.zIndex = 0;
+      placedCount++;
+      updateHUD();
+      drawAll();
+      checkWin();
+    });
+  }
+}
+
+function animateSnap(piece, tx, ty, cb) {
+  const startX = piece.x, startY = piece.y;
+  const dur = 200;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    piece.x = startX + (tx - startX) * ease;
+    piece.y = startY + (ty - startY) * ease;
+    drawAll();
+    if (t < 1) requestAnimationFrame(step);
+    else cb();
+  }
+  requestAnimationFrame(step);
+}
+
+// ============================================================
+// WIN
+// ============================================================
+function checkWin() {
+  if (placedCount < totalPieces) return;
+
+  setTimeout(() => {
+    const isLast = currentPhotoIndex >= PHOTOS.length - 1;
+    if (isLast) {
+      showFinalWin();
+    } else {
+      showWin();
+    }
+  }, 600);
+}
+
+function showWin() {
+  const ws = document.getElementById('win-screen');
+  document.getElementById('win-image').src = PHOTOS[currentPhotoIndex].src;
+  document.getElementById('win-title').textContent = ['Beautiful!', 'Lovely!', 'Perfect!'][currentPhotoIndex] || 'Beautiful!';
+  document.getElementById('win-sub').textContent = ['you put us back together', 'our memories restored', 'one more to go...'][currentPhotoIndex] || 'amazing!';
+
+  // Level dots
+  const dots = document.getElementById('level-dots');
+  dots.innerHTML = '';
+  PHOTOS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'level-dot' + (i <= currentPhotoIndex ? ' done' : '');
+    dots.appendChild(d);
+  });
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.textContent = currentPhotoIndex < PHOTOS.length - 2 ? 'Next Photo ♥' : 'Last Photo ♥';
+
+  ws.classList.remove('hidden');
+}
+
+function showFinalWin() {
+  document.getElementById('win-screen').classList.add('hidden');
+  document.getElementById('final-screen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
