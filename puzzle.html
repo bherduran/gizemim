@@ -242,6 +242,7 @@
 <!-- Final Win Screen -->
 <div class="screen hidden" id="final-screen">
   <div class="win-hearts">♥ ♥ ♥ ♥ ♥</div>
+  <img id="final-image" class="win-image" src="" alt="" style="margin: 1rem 0;">
   <div class="screen-title">Aşkımmm</div>
   <div class="screen-sub" style="margin-bottom:1rem">Birleştirdin Bizii</div>
   <p style="font-style:italic;color:var(--gold-pale);font-size:1.2rem;max-width:320px;text-align:center;line-height:1.8;margin-bottom:2rem">
@@ -878,6 +879,11 @@ function showWin() {
 
 function showFinalWin() {
   document.getElementById('win-screen').classList.add('hidden');
+  
+  // Son fotoğrafı göster
+  const finalImg = document.getElementById('final-image');
+  if (finalImg) finalImg.src = PHOTOS[PHOTOS.length - 1].src;
+
   document.getElementById('final-screen').classList.remove('hidden');
 }
 </script>
