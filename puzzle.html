@@ -697,11 +697,9 @@ function drawPiece(piece) {
     // Extra padding for tabs
     const pad = t * 0.6;
     ctx.drawImage(img,
-      srcX - pad * (img.naturalWidth/pw), srcY - pad * (img.naturalHeight/ph),
-      srcW + 2*pad*(img.naturalWidth/pw), srcH + 2*pad*(img.naturalHeight/ph),
-      piece.x - pw/2 - pad, piece.y - ph/2 - pad,
-      pw + 2*pad, ph + 2*pad
-    );
+  srcX, srcY, srcW, srcH,
+  piece.x - pw/2, piece.y - ph/2, pw, ph
+);
   } else {
     // Placeholder
     ctx.fillStyle = `hsl(${piece.row*50+piece.col*20}, 40%, 25%)`;
