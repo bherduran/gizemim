@@ -395,8 +395,13 @@ function generatePieces() {
   const cw = canvas.width;
   const ch = canvas.height;
 
-  // Board occupies center 55% of screen
-  const boardSize = Math.min(cw, ch) * 0.52;
+  // Board size changes per difficulty
+  let boardRatio;
+  if (gridSize === 2) boardRatio = 0.38;      // Easy — smaller board, more scatter room
+  else if (gridSize === 3) boardRatio = 0.44; // Medium — balanced
+  else boardRatio = 0.50;                     // Hard — bigger board, smaller pieces
+
+  const boardSize = Math.min(cw, ch) * boardRatio;
   BOARD_W = boardSize;
   BOARD_H = boardSize;
   BOARD_X = (cw - BOARD_W) / 2;
@@ -405,8 +410,7 @@ function generatePieces() {
   PIECE_W = BOARD_W / gridSize;
   PIECE_H = BOARD_H / gridSize;
 
-  // Generate tab directions for each piece
-  // Each piece has top/right/bottom/left tab: 1=out, -1=in, 0=flat(edge)
+  // Generate tab directions
   const tabs = [];
   for (let r = 0; r < gridSize; r++) {
     tabs[r] = [];
@@ -420,35 +424,102 @@ function generatePieces() {
     }
   }
 
-  // Scatter positions (avoid board center)
+  // Scatter margin
+  const margin = 15;
+
+  // Available scatter zones around the board
+  const zones = [];
+
+  // Left zone — only add if wide enough
+  if (BOARD_X - PIECE_W - margin * 2 > 0) {
+    zones.push({
+      xMin: margin,
+      xMax: BOARD_X - PIECE_W/2 - margin,
+      yMin: PIECE_H/2,
+      yMax: ch - PIECE_H/2,
+    });
+  }
+
+  // Right zone — only add if wide enough
+  if (cw - (BOARD_X + BOARD_W) - PIECE_W - margin * 2 > 0) {
+    zones.push({
+      xMin: BOARD_X + BOARD_W + PIECE_W/2 + margin,
+      xMax: cw - PIECE_W/2 - margin,
+      yMin: PIECE_H/2,
+      yMax: ch - PIECE_H/2,
+    });
+  }
+
+  // Top zone — only add if tall enough
+  if (BOARD_Y - PIECE_H - margin * 2 > 0) {
+    zones.push({
+      xMin: PIECE_W/2 + margin,
+      xMax: cw - PIECE_W/2 - margin,
+      yMin: margin,
+      yMax: BOARD_Y - PIECE_H/2 - margin,
+    });
+  }
+
+  // Bottom zone — only add if tall enough
+  if (ch - (BOARD_Y + BOARD_H) - PIECE_H - margin * 2 > 0) {
+    zones.push({
+      xMin: PIECE_W/2 + margin,
+      xMax: cw - PIECE_W/2 - margin,
+      yMin: BOARD_Y + BOARD_H + PIECE_H/2 + margin,
+      yMax: ch - PIECE_H/2 - margin,
+    });
+  }
+
+  // Fallback if no zones available
+  if (zones.length === 0) {
+    zones.push({
+      xMin: PIECE_W/2,
+      xMax: cw - PIECE_W/2,
+      yMin: PIECE_H/2,
+      yMax: ch - PIECE_H/2,
+    });
+  }
+
+  const placedPositions = [];
+
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       const correctX = BOARD_X + c * PIECE_W;
       const correctY = BOARD_Y + r * PIECE_H;
 
-      // Random scatter position
+      // Try to find non-overlapping position
       let px, py;
-      const side = Math.floor(Math.random() * 4);
-      const margin = 20;
-      const pw = PIECE_W * 1.4;
-      const ph = PIECE_H * 1.4;
-      if (side === 0) { // left
-        px = Math.random() * (BOARD_X - pw - margin) + margin;
-        py = Math.random() * (ch - ph) + ph/2;
-      } else if (side === 1) { // right
-        px = BOARD_X + BOARD_W + margin + Math.random() * (cw - BOARD_X - BOARD_W - pw - margin);
-        py = Math.random() * (ch - ph) + ph/2;
-      } else if (side === 2) { // top
-        px = Math.random() * (cw - pw) + pw/2;
-        py = Math.random() * (BOARD_Y - ph - margin) + margin;
-      } else { // bottom
-        px = Math.random() * (cw - pw) + pw/2;
-        py = BOARD_Y + BOARD_H + margin + Math.random() * (ch - BOARD_Y - BOARD_H - ph - margin);
+      let found = false;
+
+      for (let attempt = 0; attempt < 50; attempt++) {
+        // Pick a random zone
+        const zone = zones[Math.floor(Math.random() * zones.length)];
+
+        const tryX = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
+        const tryY = zone.yMin + Math.random() * (zone.yMax - zone.yMin);
+
+        // Check overlap with already placed scatter pieces
+        const overlap = placedPositions.some(pos =>
+          Math.abs(pos.x - tryX) < PIECE_W * 0.85 &&
+          Math.abs(pos.y - tryY) < PIECE_H * 0.85
+        );
+
+        if (!overlap) {
+          px = tryX;
+          py = tryY;
+          found = true;
+          break;
+        }
       }
 
-      // Clamp to canvas
-      px = Math.max(pw/2, Math.min(cw - pw/2, px));
-      py = Math.max(ph/2, Math.min(ch - ph/2, py));
+      // If no non-overlapping spot found, just place it anywhere in a zone
+      if (!found) {
+        const zone = zones[Math.floor(Math.random() * zones.length)];
+        px = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
+        py = zone.yMin + Math.random() * (zone.yMax - zone.yMin);
+      }
+
+      placedPositions.push({ x: px, y: py });
 
       pieces.push({
         row: r, col: c,
