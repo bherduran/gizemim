@@ -204,27 +204,27 @@
 
 <!-- Nav -->
 <nav>
-  <a href="index.html">← Home</a>
+  <a href="index.html">← Ana Sayfa</a>
   <span class="nav-title">G & B</span>
-  <a href="gallery.html">Gallery →</a>
+  <a href="gallery.html">Galeri →</a>
 </nav>
 
 <!-- Difficulty Select Screen -->
 <div class="screen" id="diff-screen">
-  <div class="screen-title">Our Puzzle</div>
-  <div class="screen-sub">choose your difficulty, my love</div>
+  <div class="screen-title">Puzzleımızz</div>
+  <div class="screen-sub">Zorluk seç bakalım aşkımmm</div>
 
   <div class="photo-selector" id="photo-selector"></div>
 
   <div class="diff-buttons">
     <button class="diff-btn btn-easy" onclick="startGame(2)">
-      <span>Easy <span class="diff-hint">2×2</span></span>
+      <span>Kolay <span class="diff-hint">2×2</span></span>
     </button>
     <button class="diff-btn btn-medium" onclick="startGame(3)">
-      <span>Medium <span class="diff-hint">3×3</span></span>
+      <span>Orta <span class="diff-hint">3×3</span></span>
     </button>
     <button class="diff-btn btn-hard" onclick="startGame(4)">
-      <span>Hard <span class="diff-hint">4×4</span></span>
+      <span>Zor <span class="diff-hint">4×4</span></span>
     </button>
   </div>
 </div>
@@ -232,25 +232,25 @@
 <!-- Win Screen -->
 <div class="screen hidden" id="win-screen">
   <div class="win-hearts">♥ ♥ ♥</div>
-  <div class="screen-title" id="win-title">Beautiful!</div>
-  <div class="screen-sub" id="win-sub">you put us back together</div>
+  <div class="screen-title" id="win-title">Güzelim benimmm</div>
+  <div class="screen-sub" id="win-sub">Ayrı Gayrı Olmuyo Çabuk Birleştir</div>
   <img id="win-image" class="win-image" src="" alt="">
   <div class="level-indicator" id="level-dots"></div>
-  <button class="btn-next" id="next-btn" onclick="nextLevel()">Next Photo ♥</button>
+  <button class="btn-next" id="next-btn" onclick="nextLevel()">Sonraki Fotoğraf ♥</button>
 </div>
 
 <!-- Final Win Screen -->
 <div class="screen hidden" id="final-screen">
   <div class="win-hearts">♥ ♥ ♥ ♥ ♥</div>
-  <div class="screen-title">You did it!</div>
-  <div class="screen-sub" style="margin-bottom:1rem">all our memories, restored</div>
+  <div class="screen-title">Aşkımmm</div>
+  <div class="screen-sub" style="margin-bottom:1rem">Birleştirdin Bizii</div>
   <p style="font-style:italic;color:var(--gold-pale);font-size:1.2rem;max-width:320px;text-align:center;line-height:1.8;margin-bottom:2rem">
-    Every piece of this puzzle is a piece of my heart.<br>
-    <span style="color:var(--gold-light)">I love you, always.</span>
+    Ömrümün geri kalanı için sabırsızlanıyorumm.<br>
+    <span style="color:var(--gold-light)">Senii çoook seviyorumm</span>
   </p>
   <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
-    <button class="btn-next" onclick="restartGame()">Play Again ♥</button>
-    <button class="btn-next" style="background:transparent;border-color:rgba(207,181,59,0.4)" onclick="window.location='gallery.html'">Our Gallery</button>
+    <button class="btn-next" onclick="restartGame()">Tekrar Oynaa ♥</button>
+    <button class="btn-next" style="background:transparent;border-color:rgba(207,181,59,0.4)" onclick="window.location='gallery.html'">Galerimiz</button>
   </div>
 </div>
 
