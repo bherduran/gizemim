@@ -271,8 +271,127 @@
   }
 </style>
 </head>
-<body>
 
+ <script>
+  // Şifre kontrolü
+  function checkPassword() {
+    const input = document.getElementById('password-input').value;
+    const error = document.getElementById('password-error');
+    
+    if (input === '060825') {
+      // Doğru şifre — ekranı kapat
+      document.getElementById('password-screen').style.opacity = '0';
+      document.getElementById('password-screen').style.transition = 'opacity 0.8s ease';
+      setTimeout(() => {
+        document.getElementById('password-screen').style.display = 'none';
+      }, 800);
+    } else {
+      // Yanlış şifre
+      error.textContent = 'Yanlış şifre aşkım, tekrar dene 🥺';
+      document.getElementById('password-input').value = '';
+      document.getElementById('password-input').style.borderColor = '#C41E3A';
+      setTimeout(() => {
+        error.textContent = '';
+        document.getElementById('password-input').style.borderColor = 'rgba(207,181,59,0.4)';
+      }, 2000);
+    }
+  }
+
+  // Enter tuşuyla da giriş yapılabilsin
+  document.getElementById('password-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') checkPassword();
+  });
+</script>
+ 
+<body>
+<!-- Şifre Ekranı -->
+<div id="password-screen" style="
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0d0400;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+">
+  <div style="text-align:center; padding: 2rem;">
+    
+    <!-- Kalpler -->
+    <div style="font-size:2.5rem; margin-bottom:1.5rem; animation: pulse 1.5s ease-in-out infinite;">
+      ♥ ♥ ♥
+    </div>
+
+    <!-- Başlık -->
+    <div style="
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 8vw, 3rem);
+      background: linear-gradient(135deg, #FFD700, #CFB53B);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    ">G & B</div>
+
+    <!-- Sevgi mesajı -->
+    <p style="
+      font-style: italic; color: rgba(250,240,230,0.7);
+      font-size: 1rem; letter-spacing: 0.1em;
+      margin-bottom: 2.5rem; line-height: 1.8;
+    ">
+      Bu site sadece senin için yapıldı<br>
+      <span style="color: #FFD700;">Şifreni gir aşkım 🥰</span>
+    </p>
+
+    <!-- Şifre input -->
+    <input 
+      id="password-input"
+      type="password"
+      placeholder="••••••"
+      maxlength="10"
+      style="
+        background: rgba(207,181,59,0.1);
+        border: 1px solid rgba(207,181,59,0.4);
+        color: #FAF0E6;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.5rem;
+        letter-spacing: 0.3em;
+        text-align: center;
+        padding: 0.8rem 1.5rem;
+        width: min(280px, 80vw);
+        outline: none;
+        margin-bottom: 1rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      "
+    >
+
+    <!-- Hata mesajı -->
+    <div id="password-error" style="
+      color: #C41E3A; font-size: 0.9rem;
+      font-style: italic; height: 1.5rem;
+      margin-bottom: 1rem;
+    "></div>
+
+    <!-- Giriş butonu -->
+    <button onclick="checkPassword()" style="
+      padding: 0.9rem 2.5rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, #8B0000, #C41E3A);
+      color: #FFD700;
+      border: 1px solid #CFB53B;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: all 0.3s;
+      width: min(280px, 80vw);
+    ">Giriş ♥</button>
+
+  </div>
+</div>
+
+<style>
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+</style>
 <div class="bg"></div>
 
 <!-- Floating particles -->
